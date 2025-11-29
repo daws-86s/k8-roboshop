@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq
+  namespace: roboshop
+  # these are replica set labels
+  labels:
+    project: roboshop
+    component: rabbitmq
+    tier: db
+spec:
+  replicas: 1
+  selector:
+    # these labels are used to select pods
+    matchLabels:
+      project: roboshop
+      component: rabbitmq
+      tier: db
+  # pod definition
+  template:
+    metadata:
+      labels:
+        project: roboshop
+        component: rabbitmq
+        tier: db
+    spec:
+      containers:
+      - name: rabbitmq
+        image: rabbitmq:3
+        imagePullPolicy: Always
+        readinessProbe:
+          tcpSocket:
+            port: 5672
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        livenessProbe:
+          tcpSocket:
+            port: 5672
+          initialDelaySeconds: 20
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq
+  namespace: roboshop
+spec:
+  selector:
+    project: roboshop
+    component: rabbitmq
+    tier: db
+  ports:
+    - protocol: TCP
+      port: 5672 # service port
+      targetPort: 5672 # container port
